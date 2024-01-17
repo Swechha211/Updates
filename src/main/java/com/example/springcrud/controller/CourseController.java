@@ -41,7 +41,7 @@ public class CourseController {
         }
     }
 
-
+@GetMapping("/courses/{id}")
     public ResponseEntity<Course> getCourse(@PathVariable long id){
         try {
             Optional<Course> course = courseRepository.findById(id);
@@ -55,6 +55,54 @@ public class CourseController {
             return  new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+@PutMapping("/courses/{id}")
+    public ResponseEntity<Course> updateCourse(@PathVariable long id, @RequestBody Course course){
+        Optional<Course> courseData = courseRepository.findById(id);
+        if(courseData.isPresent()){
+            Course _course = courseData.get();
+            _course.setTitle(course.getTitle());
+            _course.setDescription(course.getDescription());
+            course.setFull(course.isFull());
+
+            return new ResponseEntity<>(courseRepository.save(_course), HttpStatus.OK);
+        }
+        else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @DeleteMapping("/courses/{id}")
+    public ResponseEntity<HttpStatus> deleteCourse(@PathVariable long id){
+        try{
+            courseRepository.deleteById(id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+@DeleteMapping("/courses")
+    public ResponseEntity<HttpStatus> deleteAllCourse() {
+        try {
+            courseRepository.deleteAll();
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+@GetMapping("/course/full")
+    public ResponseEntity<List<Course>> findByFull(){
+        try {
+            List<Course> courseList = courseRepository.findByFull(true);
+            if (courseList == null || courseList.isEmpty()){
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(courseList, HttpStatus.OK);
+        } catch (Exception e){
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
 
 }
