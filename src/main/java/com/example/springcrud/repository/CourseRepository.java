@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface CourseRepository extends JpaRepository<Course, Long> {
     public List<Course> findByFull(boolean full);
+
 }

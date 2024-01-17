@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
@@ -37,6 +38,21 @@ public class CourseController {
             return new ResponseEntity<>(courseList, HttpStatus.OK);
         } catch (Exception e){
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    public ResponseEntity<Course> getCourse(@PathVariable long id){
+        try {
+            Optional<Course> course = courseRepository.findById(id);
+            if (course.isPresent()) {
+                return new ResponseEntity<>(course.get(),HttpStatus.OK);
+            } else{
+                return  new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+
+        } catch(Exception e){
+            return  new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
