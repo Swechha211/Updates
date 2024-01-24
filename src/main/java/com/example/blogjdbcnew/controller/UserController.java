@@ -1,9 +1,8 @@
 package com.example.blogjdbcnew.controller;
 
-import com.example.blogjdbcnew.entities.Post;
+
 import com.example.blogjdbcnew.entities.User;
-import com.example.blogjdbcnew.repositories.PostRepo;
-import com.example.blogjdbcnew.repositories.UserRepo;
+import com.example.blogjdbcnew.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,40 +13,32 @@ import java.util.List;
 @RequestMapping("/users")
 public class UserController {
     @Autowired
-    private UserRepo userRepo;
+    private UserService userService;
 
     @GetMapping("/")
     public List<User> getAllUsers() {
-
-        return userRepo.findAll();
+        return userService.getAllUsers();
     }
+
     @GetMapping("/{id}")
     public User getUserById(@PathVariable Integer id) {
-        return userRepo.findById(id);
+        return userService.getUserById(id);
     }
 
     @PostMapping("/")
     public void createUser(@RequestBody User user) {
-        userRepo.create(user);
+        userService.createUser(user);
     }
 
     @PutMapping("/{id}")
     public void updateUser(@PathVariable Integer id, @RequestBody User updatedUser) {
-        User existingUser = userRepo.findById(id);
-        if (existingUser != null) {
-            existingUser.setName(updatedUser.getName());
-            existingUser.setEmail(updatedUser.getEmail());
-            existingUser.setPassword(updatedUser.getPassword());
-            existingUser.setAbout(updatedUser.getAbout());
-            userRepo.update(existingUser);
-        }
+        userService.updateUser(id, updatedUser);
     }
 
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Integer id) {
-        userRepo.delete(id);
+        userService.deleteUser(id);
     }
-
 
 
 }

@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Repository
-public class JdbcPostRepository implements PostRepo{
+public class PostRepoImpl implements PostRepo{
 
     @Autowired
     private DataSource dataSource;

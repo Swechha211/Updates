@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Repository
-public class JdbcUserRepository implements UserRepo{
+public class UserRepoImpl implements UserRepo{
 
     @Autowired
     private DataSource dataSource;
