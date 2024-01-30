@@ -26,6 +26,16 @@ public class CommentController {
         return commentService.getCommentById(commentId);
     }
 
+//    @GetMapping("//{userId}")
+//    public Comment getByUserId(@PathVariable Integer userId) {
+//        return commentService.getByUserId(userId);
+//    }
+
+    @GetMapping("/users/{userId}")
+    public List<Comment> getByUserId(Integer userId) {
+        return commentService.getByUserId(userId);
+    }
+
     @PostMapping("/")
     public void createComment(@RequestBody Comment comment) {
         commentService.createComment(comment);

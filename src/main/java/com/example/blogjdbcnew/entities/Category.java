@@ -1,9 +1,13 @@
 package com.example.blogjdbcnew.entities;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Category {
     private Integer catid;
     private String title;
     private String description;
+    private List<Post> post = new ArrayList<>();
 
     public Integer getCatid() {
         return catid;

@@ -42,6 +42,10 @@ public class PostService {
         postRepo.delete(id);
     }
 
+    public Post getByUserId(Integer userId) {
+        return postRepo.findByUserId(userId);
+    }
+
     private void validatePost(Post post) {
         if (post.getTitle() == null || post.getTitle().trim().isEmpty()) {
             throw new IllegalArgumentException("Title cannot be empty");

@@ -41,4 +41,9 @@ public class PostController {
         postService.deleteBlog(id);
     }
 
+    @GetMapping("/users/{userId}")
+    public Post getByUserId(@PathVariable Integer userId) {
+        return postService.getByUserId(userId);
+    }
+
 }

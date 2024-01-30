@@ -12,4 +12,9 @@ public interface CommentRepo {
     void save(Comment comment);
     void update(Comment comment);
     void delete(Integer commentId);
+
+    Comment findByUserId(Integer userId);
+
+    List<Comment> findByPost(Integer id);
+    List<Comment> findByUser(Integer id);
 }

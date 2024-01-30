@@ -1,6 +1,7 @@
 package com.example.blogjdbcnew.repositories;
 
 import com.example.blogjdbcnew.entities.Post;
+import com.example.blogjdbcnew.entities.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -14,6 +15,9 @@ public class PostRepoImpl implements PostRepo{
 
     @Autowired
     private DataSource dataSource;
+
+    @Autowired
+    private User user;
 
     @Override
     public List<Post> findAll() {
@@ -96,5 +100,27 @@ public class PostRepoImpl implements PostRepo{
             e.printStackTrace();
         }
 
+    }
+
+    @Override
+    public Post findByUserId(Integer userId) {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement("SELECT * FROM post WHERE id = ?")) {
+
+            statement.setInt(1, userId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    Post blog = new Post();
+                    blog.setId(resultSet.getInt("id"));
+                    blog.setTitle(resultSet.getString("title"));
+                    blog.setContent(resultSet.getString("content"));
+                    blog.setUserId(userId);
+                    return blog;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

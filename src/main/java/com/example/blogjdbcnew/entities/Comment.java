@@ -7,8 +7,35 @@ public class Comment {
     private Integer commentId;
     private String content;
     private Date addedDate;
-    private User user;
-    private Post post;
+    private int userId;
+//    private User user;
+//    private Post post;
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
+
+//    public User getUser() {
+//        return user;
+//    }
+//
+//    public void setUser(User user) {
+//        this.user = user;
+//    }
+//
+//    public Post getPost() {
+//        return post;
+//    }
+//
+//    public void setPost(Post post) {
+//        this.post = post;
+//    }
+
+
 
     public Integer getCommentId() {
         return commentId;
@@ -34,19 +61,6 @@ public class Comment {
         this.addedDate = addedDate;
     }
 
-    public User getUser() {
-        return user;
-    }
 
-    public void setUser(User user) {
-        this.user = user;
-    }
 
-    public Post getPost() {
-        return post;
-    }
-
-    public void setPost(Post post) {
-        this.post = post;
-    }
 }

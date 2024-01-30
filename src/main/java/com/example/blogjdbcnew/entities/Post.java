@@ -1,10 +1,26 @@
 package com.example.blogjdbcnew.entities;
 
+import org.springframework.stereotype.Component;
 
+@Component
 public class Post {
     private Integer id;
     private String title;
     private String content;
+    private int userId;
+
+//    private Category category;
+//
+//    private User user;
+
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
 
     public int getId() {
         return id;

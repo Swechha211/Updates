@@ -37,6 +37,14 @@ public class CommentService {
         }
     }
 
+//    public Comment getByUserId(Integer userId) {
+//        return commentRepo.findByUserId(userId);
+//    }
+
+    public List<Comment> getByUserId(Integer userId) {
+        return commentRepo.findByUser(userId);
+    }
+
     public void deleteComment(Integer commentId) {
         commentRepo.delete(commentId);
     }
