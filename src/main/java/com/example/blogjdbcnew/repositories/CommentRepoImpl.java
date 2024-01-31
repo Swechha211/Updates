@@ -1,8 +1,11 @@
 package com.example.blogjdbcnew.repositories;
 
+import com.example.blogjdbcnew.entities.Category;
 import com.example.blogjdbcnew.entities.Comment;
 import com.example.blogjdbcnew.entities.Post;
 import com.example.blogjdbcnew.entities.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -16,18 +19,27 @@ import java.sql.Date;
 public class CommentRepoImpl implements CommentRepo{
 
     @Autowired
-    private DataSource dataSource;
+    private final DataSource dataSource;
+    private Logger logger = LoggerFactory.getLogger(CommentRepoImpl.class);
 
     @Autowired
     private User user;
+
+    public CommentRepoImpl(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
     @Override
     public List<Comment> findAll() {
         List<Comment> comments = new ArrayList<>();
-        try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery("SELECT * FROM comment")) {
 
-            while (resultSet.next()) {
+        try (Connection connection = dataSource.getConnection();)
+        {
+            logger.info("Connectes to mysql database");
+            try(Statement statement = connection.createStatement()){
+                String sql = "SELECT * FROM comment";
+                try(ResultSet resultSet = statement.executeQuery(sql)) {
+                    while (resultSet.next()) {
                 Comment comment = new Comment();
                 comment.setCommentId(resultSet.getInt("commentId"));
                 comment.setContent(resultSet.getString("content"));
@@ -38,76 +50,118 @@ public class CommentRepoImpl implements CommentRepo{
 
                 comments.add(comment);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+
+                }
+            } catch (SQLException e){
+                logger.error("Error in sql querry" + e.getMessage());
+            }
+        } catch (Exception e) {
+            logger.error("Error while connecting to the database" + e.getMessage());
         }
         return comments;
     }
 
     @Override
     public Comment findById(Integer commentId) {
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement("SELECT * FROM comment WHERE commentId = ?")) {
 
-            statement.setInt(1, commentId);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    Comment comment = new Comment();
-                    comment.setCommentId(resultSet.getInt("commentId"));
-                    comment.setContent(resultSet.getString("content"));
-                    comment.setAddedDate(resultSet.getDate("addedDate"));
-                    int userId = user.getId();
-                    comment.setUserId(userId);
-                    return comment;
+        try (Connection connection = dataSource.getConnection()) {
+            logger.info("Connected to the database");
+
+            try (Statement statement = connection.createStatement()) {
+                String sql = "SELECT * FROM comment WHERE commentId = " + commentId;
+                try (ResultSet resultSet = statement.executeQuery(sql)) {
+                    if (resultSet.next()) {
+                        Comment comment = new Comment();
+                        comment.setCommentId(resultSet.getInt("commentId"));
+                        comment.setContent(resultSet.getString("content"));
+                        comment.setAddedDate(resultSet.getDate("addedDate"));
+                        int userId = user.getId();
+                        comment.setUserId(userId);
+                        return comment;
+                    }
                 }
+                logger.info("Record selected successfully");
+            } catch (SQLException e) {
+                logger.error("Error executing the SQL query: " + e.getMessage());
+                throw new SQLException("Error executing the SQL query: " + e.getMessage());
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            logger.error("Error connecting to the database: " + e.getMessage());
         }
         return null;
     }
 
     @Override
     public void save(Comment comment) {
-        try (Connection connection = dataSource.getConnection();
-//             PreparedStatement statement = connection.prepareStatement("INSERT INTO comment(content, addedDate, userId) VALUES (?, ?,?)")) {
-             PreparedStatement statement = connection.prepareStatement("INSERT INTO comment(content, addedDate) VALUES (?, ?)")) {
 
+        try (Connection connection = dataSource.getConnection()) {
+            logger.info("Connected to the database");
+            try (Statement statement = connection.createStatement()) {
 
-            statement.setString(1, comment.getContent());
-            statement.setDate(2, comment.getAddedDate());
-//            statement.setInt(3,comment.getUserId());
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
+                String sql = "INSERT INTO comment(content, addedDate) VALUES ('" + comment.getContent()+ "', '" + comment.getAddedDate()  + "')";
+                statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+                logger.info("Record saved successfully");
+                try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        comment.setCommentId(generatedKeys.getInt(1));
+                    } else {
+                        throw new SQLException("Creating record failed, no ID obtained.");
+                    }
+                }
+            } catch (SQLException e) {
+                logger.error("Error executing the SQL query" + e.getMessage());
+                throw new SQLException("Error executing the SQL query" + e.getMessage());
+            }
+        } catch (Exception e) {
+            logger.error("Error connecting to the database" + e.getMessage());
         }
 
     }
 
     @Override
     public void update(Comment comment) {
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement("UPDATE comment SET content = ?, addedDate = ? WHERE commentId = ?")) {
 
-            statement.setString(1, comment.getContent());
-            statement.setDate(2, comment.getAddedDate());
-            statement.setInt(3, comment.getCommentId());
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
+        try (Connection connection = dataSource.getConnection()) {
+            logger.info("Connected to the database");
+            try (Statement statement = connection.createStatement()) {
+
+                String sql = "UPDATE comment SET content = '" + comment.getContent() + "', addedDate = '" + comment.getAddedDate() + "' WHERE commentId = " + comment.getCommentId();
+                statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+                logger.info("Record updated successfully");
+                try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        comment.setCommentId(generatedKeys.getInt(1));
+                    } else {
+                        throw new SQLException("Updating record failed, no ID obtained.");
+                    }
+                }
+            } catch (SQLException e) {
+                logger.error("Error executing the SQL query" + e.getMessage());
+                throw new SQLException("Error executing the SQL query" + e.getMessage());
+            }
+        } catch (Exception e) {
+            logger.error("Error connecting to the database" + e.getMessage());
         }
 
     }
 
     @Override
     public void delete(Integer commentId) {
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement("DELETE FROM comment WHERE commentId = ?")) {
 
-            statement.setInt(1, commentId);
-            statement.executeUpdate();
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement()) {
+            String sql = "DELETE FROM comment WHERE commentId = " + commentId;
+            int rowsAffected = statement.executeUpdate(sql);
+            if (rowsAffected == 0) {
+                logger.warn("No user found with ID: " + commentId);
+            } else {
+                logger.info("User with ID " + commentId + " deleted successfully");
+            }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error executing the SQL query: " + e.getMessage());
+
+        } catch (Exception e) {
+            logger.error("Error connecting to the database: " + e.getMessage());
         }
 
 

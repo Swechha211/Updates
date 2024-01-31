@@ -1,6 +1,9 @@
 package com.example.blogjdbcnew.repositories;
 
 import com.example.blogjdbcnew.entities.Category;
+import com.example.blogjdbcnew.entities.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -13,73 +16,117 @@ import java.util.List;
 public class CategoryRepoImpl implements CategoryRepo{
 
     @Autowired
-    private DataSource dataSource;
+    private final DataSource dataSource;
+    private Logger logger = LoggerFactory.getLogger(CategoryRepoImpl.class);
+
+    public CategoryRepoImpl(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
     @Override
     public List<Category> findAll() {
         List<Category> categories = new ArrayList<>();
-        try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery("SELECT * FROM category")) {
+        try (Connection connection = dataSource.getConnection();)
+        {
+            logger.info("Connectes to mysql database");
+            try(Statement statement = connection.createStatement()){
+                String sql = "SELECT * FROM category";
+                try(ResultSet resultSet = statement.executeQuery(sql)) {
+                    while (resultSet.next()) {
+                        Category category = new Category();
+                        category .setCatid(resultSet.getInt("catid"));
+                        category .setTitle(resultSet.getString("title"));
+                        category .setDescription(resultSet.getString("description"));
+                        categories .add(category );
+                    }
 
-            while (resultSet.next()) {
-                Category category = new Category();
-                category .setCatid(resultSet.getInt("catid"));
-                category .setTitle(resultSet.getString("title"));
-                category .setDescription(resultSet.getString("description"));
-                categories .add(category );
+                }
+            } catch (SQLException e){
+                logger.error("Error in sql querry" + e.getMessage());
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            logger.error("Error while connecting to the database" + e.getMessage());
         }
         return categories;
     }
 
     @Override
     public Category findById(Integer catid) {
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement("SELECT * FROM category WHERE catid = ?")) {
+        Category category = new Category();
+        try (Connection connection = dataSource.getConnection()) {
+            logger.info("Connected to the database");
 
-            statement.setInt(1, catid);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    Category category = new Category();
+            try (Statement statement = connection.createStatement()) {
+                String sql = "SELECT * FROM category WHERE catid = " + catid;
+                try (ResultSet resultSet = statement.executeQuery(sql)) {
+                    if (resultSet.next()) {
                     category.setCatid(resultSet.getInt("catid"));
                     category.setTitle(resultSet.getString("title"));
                     category.setDescription(resultSet.getString("description"));
                     return  category;
+                    }
                 }
+                logger.info("Record selected successfully");
+            } catch (SQLException e) {
+                logger.error("Error executing the SQL query: " + e.getMessage());
+                throw new SQLException("Error executing the SQL query: " + e.getMessage());
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            logger.error("Error connecting to the database: " + e.getMessage());
         }
-        return null;
+       return category;
     }
 
     @Override
     public void save(Category category) {
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement("INSERT INTO category(title, description) VALUES (?, ?)")) {
 
-            statement.setString(1, category.getTitle());
-            statement.setString(2, category.getDescription());
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
+        try (Connection connection = dataSource.getConnection()) {
+            logger.info("Connected to the database");
+            try (Statement statement = connection.createStatement()) {
+
+                String sql = "INSERT INTO category(title, description) VALUES ('" + category.getTitle() + "', '" + category.getDescription()  + "')";
+                statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+                logger.info("Record saved successfully");
+                try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        category.setCatid(generatedKeys.getInt(1));
+                    } else {
+                        throw new SQLException("Creating record failed, no ID obtained.");
+                    }
+                }
+            } catch (SQLException e) {
+                logger.error("Error executing the SQL query" + e.getMessage());
+                throw new SQLException("Error executing the SQL query" + e.getMessage());
+            }
+        } catch (Exception e) {
+            logger.error("Error connecting to the database" + e.getMessage());
         }
 
     }
 
     @Override
     public void update(Category category) {
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement("UPDATE category SET title = ?, description = ? WHERE catid = ?")) {
 
-            statement.setString(1, category.getTitle());
-            statement.setString(2, category.getDescription());
-            statement.setInt(3, category.getCatid());
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
+        try (Connection connection = dataSource.getConnection()) {
+            logger.info("Connected to the database");
+            try (Statement statement = connection.createStatement()) {
+
+                String sql = "UPDATE category SET title = '" + category.getTitle() + "', description = '" + category.getDescription() + "' WHERE catid = " + category.getCatid();
+                statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+                logger.info("Record updated successfully");
+                try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        category.setCatid(generatedKeys.getInt(1));
+                    } else {
+                        throw new SQLException("Updating record failed, no ID obtained.");
+                    }
+                }
+            } catch (SQLException e) {
+                logger.error("Error executing the SQL query" + e.getMessage());
+                throw new SQLException("Error executing the SQL query" + e.getMessage());
+            }
+        } catch (Exception e) {
+            logger.error("Error connecting to the database" + e.getMessage());
         }
 
     }
@@ -87,12 +134,19 @@ public class CategoryRepoImpl implements CategoryRepo{
     @Override
     public void delete(Integer catid) {
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement("DELETE FROM category WHERE catid = ?")) {
-
-            statement.setInt(1, catid);
-            statement.executeUpdate();
+             Statement statement = connection.createStatement()) {
+            String sql = "DELETE FROM category WHERE catid = " + catid;
+            int rowsAffected = statement.executeUpdate(sql);
+            if (rowsAffected == 0) {
+                logger.warn("No user found with ID: " + catid);
+            } else {
+                logger.info("User with ID " + catid + " deleted successfully");
+            }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error executing the SQL query: " + e.getMessage());
+
+        } catch (Exception e) {
+            logger.error("Error connecting to the database: " + e.getMessage());
         }
 
     }

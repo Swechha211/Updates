@@ -23,36 +23,9 @@ public class RecordingRepoImpl implements RecordingRepository {
     public final DataSource dataSource;
     private final Logger logger = LoggerFactory.getLogger(RecordingRepoImpl.class);
 
-
     public RecordingRepoImpl(DataSource dataSource) {
         this.dataSource = dataSource;
     }
-
-
-//    @Override
-//    public RecordEntity addRecord(RecordEntity recordEntity) {
-//        try (Connection connection = dataSource.getConnection()) {
-//            logger.info("Connected to the database");
-//            try (Statement statement = connection.createStatement()) {
-//                String sql = "INSERT INTO record (title, start, end, url,status) VALUES ('" + recordEntity.getTitle() + "', '" + recordEntity.getStart() + "', '" + recordEntity.getEnd() + "', '" + recordEntity.getUrl() + "','" + recordEntity.getStatus() + "')";
-//                statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
-//                logger.info("Record saved successfully");
-//                try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
-//                    if (generatedKeys.next()) {
-//                        recordEntity.setId(generatedKeys.getInt(1));
-//                    } else {
-//                        throw new SQLException("Creating record failed, no ID obtained.");
-//                    }
-//                }
-//            } catch (SQLException e) {
-//                logger.error("Error executing the SQL query" + e.getMessage());
-//                throw new SQLException("Error executing the SQL query" + e.getMessage());
-//            }
-//        } catch (Exception e) {
-//            logger.error("Error connecting to the database" + e.getMessage());
-//        }
-//        return recordEntity;
-//    }
 
     @Override
     public User addRecord(User user) {
