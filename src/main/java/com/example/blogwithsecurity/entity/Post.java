@@ -2,7 +2,9 @@ package com.example.blogwithsecurity.entity;
 
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Component
 public class Post {
@@ -10,6 +12,10 @@ public class Post {
     private String title;
     private String content;
     private Date addedDate;
+    private User user;
+    private Category category;
+
+    private List<Post> post = new ArrayList<>();
 
     public Date getAddedDate() {
         return addedDate;
@@ -19,7 +25,7 @@ public class Post {
         this.addedDate = addedDate;
     }
 
-    private User user;
+
 
     public Integer getId() {
         return id;
@@ -51,5 +57,13 @@ public class Post {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
     }
 }

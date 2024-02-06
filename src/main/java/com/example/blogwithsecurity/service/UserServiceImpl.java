@@ -63,21 +63,15 @@ public class UserServiceImpl implements UserService{
         try (Connection connection = dataSource.getConnection()) {
             logger.info("Connected to the database");
             try (Statement statement = connection.createStatement()) {
-                 user =this.userRepository.findById(userId).orElseThrow(()-> new ResourceNotFoundExceptation("User", "id", userId));
+//                 user =this.userRepository.findById(userId).orElseThrow(()-> new ResourceNotFoundExceptation("User", "id", userId));
 
-                String sql = "UPDATE user SET name = '" + user.getName() + "', email = '" + user.getEmail() + "', password = '" + user.getPassword() + "', about = '" + user.getAbout() + "' WHERE id = " + user.getId();
+                String sql = "UPDATE user SET name = '" + user.getName() + "', email = '" + user.getEmail() + "', password = '" + user.getPassword() + "', about = '" + user.getAbout() + "' WHERE id = " + userId;
                 statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
                 logger.info("Record updated successfully");
-                try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        user.setId(generatedKeys.getInt(1));
-                    } else {
-                        throw new SQLException("Updating record failed, no ID obtained.");
-                    }
-                }
+
             } catch (SQLException e) {
                 logger.error("Error executing the SQL query" + e.getMessage());
-                throw new SQLException("Error executing the SQL query" + e.getMessage());
+
             }
         } catch (Exception e) {
             logger.error("Error connecting to the database" + e.getMessage());
