@@ -1,7 +1,7 @@
 package com.example.blogwithsecurity.controller;
 
 import com.example.blogwithsecurity.entity.User;
-import com.example.blogwithsecurity.payloads.UserDto;
+
 import com.example.blogwithsecurity.service.UserService;
 import com.example.blogwithsecurity.utils.ApiResource;
 import org.springframework.beans.factory.annotation.Autowired;
