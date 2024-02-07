@@ -1,6 +1,7 @@
 package com.example.blogwithsecurity.service;
 
 import com.example.blogwithsecurity.entity.Category;
+import com.example.blogwithsecurity.exceptation.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,9 @@ public class CategoryServiceImpl implements CategoryService{
 
     @Override
     public Category createCategory(Category category) {
+        if (category.getTitle().isEmpty() || category.getDescription().isEmpty()) {
+            throw new IllegalArgumentException("Category title and description cannot be empty");
+        }
         try (Connection connection = dataSource.getConnection()) {
             logger.info("Connected to the database");
             try (Statement statement = connection.createStatement()) {
@@ -55,12 +59,18 @@ public class CategoryServiceImpl implements CategoryService{
 
     @Override
     public Category updateCategory(Category category, Integer categoryId) {
+        if (category.getTitle().isEmpty() || category.getDescription().isEmpty()) {
+            throw new IllegalArgumentException("Category title and description cannot be empty");
+        }
         try (Connection connection = dataSource.getConnection()) {
             logger.info("Connected to the database");
             try (Statement statement = connection.createStatement()) {
 
                 String sql = "UPDATE category SET title = '" + category.getTitle() + "', description = '" + category.getDescription() + "' WHERE catid = " + categoryId;
-                statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+                int rowsAffected = statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+                if (rowsAffected == 0) {
+                    throw new ResourceNotFoundException("Category", "id", categoryId);
+                }
                 logger.info("Record updated successfully");
 
             } catch (SQLException e) {
@@ -68,7 +78,7 @@ public class CategoryServiceImpl implements CategoryService{
                 throw new SQLException("Error executing the SQL query" + e.getMessage());
             }
         } catch (Exception e) {
-            logger.error("Error connecting to the database" + e.getMessage());
+            logger.error("Error connecting to the database " + e.getMessage());
         }
         return category;
     }

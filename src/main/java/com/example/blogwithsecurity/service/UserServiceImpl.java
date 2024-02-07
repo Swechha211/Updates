@@ -1,7 +1,7 @@
 package com.example.blogwithsecurity.service;
 
 import com.example.blogwithsecurity.entity.User;
-import com.example.blogwithsecurity.exceptation.ResourceNotFoundExceptation;
+import com.example.blogwithsecurity.exceptation.ResourceNotFoundException;
 
 import com.example.blogwithsecurity.repository.UserRepository;
 import org.slf4j.Logger;
@@ -16,7 +16,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService{
@@ -34,6 +33,9 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public User create(User user) {
+        if (user.getName().isEmpty() || user.getEmail().isEmpty() || user.getPassword().isEmpty() || user.getAbout().isEmpty()) {
+            throw new IllegalArgumentException("User's name, email, password and about cannot be empty");
+        }
         try (Connection connection = dataSource.getConnection()) {
             logger.info("Connected to the database");
             try (Statement statement = connection.createStatement()) {
@@ -60,13 +62,18 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public User update(User user, Integer userId) {
+        if (user.getName().isEmpty() || user.getEmail().isEmpty() || user.getPassword().isEmpty() || user.getAbout().isEmpty()) {
+            throw new IllegalArgumentException("User's name, email, password and about cannot be empty");
+        }
         try (Connection connection = dataSource.getConnection()) {
             logger.info("Connected to the database");
             try (Statement statement = connection.createStatement()) {
-//                 user =this.userRepository.findById(userId).orElseThrow(()-> new ResourceNotFoundExceptation("User", "id", userId));
 
                 String sql = "UPDATE user SET name = '" + user.getName() + "', email = '" + user.getEmail() + "', password = '" + user.getPassword() + "', about = '" + user.getAbout() + "' WHERE id = " + userId;
-                statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+                int rowsAffected = statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+                if (rowsAffected == 0) {
+                    throw new ResourceNotFoundException("User", "id", userId);
+                }
                 logger.info("Record updated successfully");
 
             } catch (SQLException e) {
@@ -74,7 +81,7 @@ public class UserServiceImpl implements UserService{
 
             }
         } catch (Exception e) {
-            logger.error("Error connecting to the database" + e.getMessage());
+            logger.error("Error connecting to the database " + e.getMessage());
         }
         return null;
     }
@@ -98,7 +105,7 @@ public class UserServiceImpl implements UserService{
                         user.setPassword(resultSet.getString("password"));
                         user.setAbout(resultSet.getString("about"));
                     } else {
-                        throw new ResourceNotFoundExceptation("User", "id", userId);
+                        throw new ResourceNotFoundException("User", "id", userId);
                     }
                 }
                 logger.info("Record selected successfully");

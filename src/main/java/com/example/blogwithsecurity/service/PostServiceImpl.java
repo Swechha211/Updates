@@ -3,7 +3,7 @@ package com.example.blogwithsecurity.service;
 import com.example.blogwithsecurity.entity.Category;
 import com.example.blogwithsecurity.entity.Post;
 import com.example.blogwithsecurity.entity.User;
-import com.example.blogwithsecurity.exceptation.ResourceNotFoundExceptation;
+import com.example.blogwithsecurity.exceptation.ResourceNotFoundException;
 import com.example.blogwithsecurity.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +36,9 @@ public class PostServiceImpl implements PostService{
 
     @Override
     public Post createPost(Post post, Integer userId, Integer categoryId) {
+        if (post.getTitle().isEmpty() || post.getContent().isEmpty()) {
+            throw new IllegalArgumentException("Post title and content cannot be empty");
+        }
         try (Connection connection = dataSource.getConnection()) {
             logger.info("Connected to the database");
             try (Statement statement = connection.createStatement()) {
@@ -52,13 +55,7 @@ public class PostServiceImpl implements PostService{
                 post.setUser(user);
                 post.setCategory(category);
                 logger.info("Record saved successfully");
-//                try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
-//                    if (generatedKeys.next()) {
-//                        post.setId(generatedKeys.getInt(1));
-//                    } else {
-//                        throw new SQLException("Creating record failed, no ID obtained.");
-//                    }
-//                }
+
             } catch (SQLException e) {
                 logger.error("Error executing the SQL query" + e.getMessage());
                 throw new SQLException("Error executing the SQL query" + e.getMessage());
@@ -71,20 +68,27 @@ public class PostServiceImpl implements PostService{
 
     @Override
     public Post updatePost(Post post, Integer postId) {
+        if (post.getTitle().isEmpty() || post.getContent().isEmpty()) {
+            throw new IllegalArgumentException("Post title and content cannot be empty");
+        }
         try (Connection connection = dataSource.getConnection()) {
             logger.info("Connected to the database");
             try (Statement statement = connection.createStatement()) {
 
                 String sql = "UPDATE post SET title = '" + post.getTitle() + "', content = '" + post.getContent() + "' WHERE id = " + postId;
-                statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+                int rowsAffected = statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+                if (rowsAffected == 0) {
+                    logger.warn("No post found with ID: " + postId);
+                    throw new ResourceNotFoundException("Post", "id", postId);
+                }
                 logger.info("Record updated successfully");
-//
+
             } catch (SQLException e) {
                 logger.error("Error executing the SQL query" + e.getMessage());
                 throw new SQLException("Error executing the SQL query" + e.getMessage());
             }
         } catch (Exception e) {
-            logger.error("Error connecting to the database" + e.getMessage());
+            logger.error("Error connecting to the database " + e.getMessage());
         }
         return null;
     }
@@ -96,9 +100,9 @@ public class PostServiceImpl implements PostService{
             String sql = "DELETE FROM post WHERE id = " + postId;
             int rowsAffected = statement.executeUpdate(sql);
             if (rowsAffected == 0) {
-                logger.warn("No user found with ID: " + postId);
+                logger.warn("No post found with ID: " + postId);
             } else {
-                logger.info("User with ID " + postId + " deleted successfully");
+                logger.info("Post with ID " + postId + " deleted successfully");
             }
         } catch (SQLException e) {
             logger.error("Error executing the SQL query: " + e.getMessage());
@@ -192,7 +196,7 @@ public class PostServiceImpl implements PostService{
             try (Statement statement = connection.createStatement()) {
                 String sql = "SELECT * FROM post WHERE categoryId = " + categoryId;
                 try (ResultSet resultSet = statement.executeQuery(sql)) {
-                    if (resultSet.next()) {
+                    while (resultSet.next()) {
                         Post blog = new Post();
                         blog.setId(resultSet.getInt("id"));
                         blog.setTitle(resultSet.getString("title"));
@@ -229,7 +233,7 @@ public class PostServiceImpl implements PostService{
             try (Statement statement = connection.createStatement()) {
                 String sql = "SELECT * FROM post WHERE userId = " + userId;
                 try (ResultSet resultSet = statement.executeQuery(sql)) {
-                    if (resultSet.next()) {
+                   while (resultSet.next()) {
                         Post blog = new Post();
                         blog.setId(resultSet.getInt("id"));
                         blog.setTitle(resultSet.getString("title"));
