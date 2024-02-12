@@ -3,8 +3,12 @@ package com.example.blogwithsecurity.service;
 
 
 import com.example.blogwithsecurity.entity.User;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
+
+@Service
 
 public interface UserService {
 
@@ -13,4 +17,6 @@ public interface UserService {
     User findById(Integer userId);
     List<User> findAll();
     void delete(Integer userId);
+    User findByName(String username);
+
 }

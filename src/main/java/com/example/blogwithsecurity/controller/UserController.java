@@ -48,4 +48,19 @@ public class UserController {
         return new ResponseEntity(new ApiResource("User deleted successfully", true), HttpStatus.OK);
     }
 
+//    @PostMapping("/login")
+//    public String loginUser(@RequestBody User user) throws SQLException {
+//        PreparedStatement statement = connection.prepareStatement("SELECT * FROM users WHERE username = ? AND password = ?");
+//        statement.setString(1, user.getUsername());
+//        statement.setString(2, user.getPassword());
+//
+//        ResultSet resultSet = statement.executeQuery();
+//
+//        if (resultSet.next()) {
+//            return "Login successful!";
+//        } else {
+//            return "Invalid credentials.";
+//        }
+//    }
+
 }

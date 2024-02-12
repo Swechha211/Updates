@@ -10,10 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,8 +20,9 @@ public class UserServiceImpl implements UserService{
 
     @Autowired
     private final  DataSource dataSource;
+
     @Autowired
-    private UserRepository userRepository;
+    private  User user;
     private final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
     public UserServiceImpl(DataSource dataSource) {
@@ -172,6 +170,39 @@ public class UserServiceImpl implements UserService{
             logger.error("Error connecting to the database: " + e.getMessage());
         }
 
+    }
+
+    @Override
+    public User findByName(String username) {
+
+
+        try (Connection connection = dataSource.getConnection()) {
+            logger.info("Connected to the database");
+
+
+                String sql = "SELECT * FROM user WHERE name = ?";
+                try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                    statement.setString(1, username); // Set the username as a parameter
+                    try (ResultSet resultSet = statement.executeQuery()) {
+
+                    if (resultSet.next()) {
+                        user = new User();
+                        user.setId(resultSet.getInt("id"));
+                        user.setName(resultSet.getString("name"));
+                        user.setEmail(resultSet.getString("email"));
+                        user.setPassword(resultSet.getString("password"));
+                        user.setAbout(resultSet.getString("about"));
+                    }
+                }
+                logger.info("Record selected successfully");
+            } catch (SQLException e) {
+                logger.error("Error executing the SQL query: " + e.getMessage());
+                throw new SQLException("Error executing the SQL query: " + e.getMessage());
+            }
+        } catch (Exception e) {
+            logger.error("Error connecting to the database: " + e.getMessage());
+        }
+        return user;
     }
 
 
