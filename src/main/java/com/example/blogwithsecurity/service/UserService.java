@@ -17,6 +17,8 @@ public interface UserService {
     User findById(Integer userId);
     List<User> findAll();
     void delete(Integer userId);
-    User findByName(String username);
+    Optional<User>findByName(String username);
+    User findByNameandPassword(String username ,String password);
+    Optional<User> findByEmail(String email);
 
 }

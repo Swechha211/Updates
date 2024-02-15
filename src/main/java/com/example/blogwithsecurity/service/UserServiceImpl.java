@@ -1,8 +1,10 @@
 package com.example.blogwithsecurity.service;
 
+import com.example.blogwithsecurity.entity.Role;
 import com.example.blogwithsecurity.entity.User;
 import com.example.blogwithsecurity.exceptation.ResourceNotFoundException;
 
+import com.example.blogwithsecurity.exceptation.UserNotFoundException;
 import com.example.blogwithsecurity.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,8 +13,7 @@ import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class UserServiceImpl implements UserService{
@@ -172,18 +173,58 @@ public class UserServiceImpl implements UserService{
 
     }
 
-    @Override
-    public User findByName(String username) {
 
+    @Override
+    public Optional<User>  findByName(String username) {
+        User user = null;
 
         try (Connection connection = dataSource.getConnection()) {
             logger.info("Connected to the database");
 
+            // Use a prepared statement to safely inject the username and password values
+            String sql = "SELECT * FROM user WHERE name = ? ";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, username); // Set the username as a parameter
 
-                String sql = "SELECT * FROM user WHERE name = ?";
-                try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                    statement.setString(1, username); // Set the username as a parameter
-                    try (ResultSet resultSet = statement.executeQuery()) {
+                try (ResultSet resultSet = statement.executeQuery()) {
+
+                    if (resultSet.next()) {
+                        user = new User();
+                        user.setId(resultSet.getInt("id"));
+                        user.setName(resultSet.getString("name"));
+                        user.setEmail(resultSet.getString("email"));
+                        user.setPassword(resultSet.getString("password"));
+                        user.setAbout(resultSet.getString("about"));
+                    }
+                }
+                logger.info("Record selected successfully");
+            } catch (SQLException e) {
+                logger.error("Error executing the SQL query: " + e.getMessage());
+                throw new SQLException("Error executing the SQL query: " + e.getMessage());
+            }
+        } catch (Exception e) {
+            logger.error("Error connecting to the database: " + e.getMessage());
+        }
+        return Optional.empty();
+    }
+
+
+
+    @Override
+    public User findByNameandPassword(String username, String password) {
+        User user = null;
+
+        try (Connection connection = dataSource.getConnection()) {
+            logger.info("Connected to the database");
+
+            // Use a prepared statement to safely inject the username and password values
+            String sql = "SELECT * FROM user WHERE name = ? AND password = ?";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, username); // Set the username as a parameter
+                statement.setString(2, password); // Set the password as a parameter
+
+
+                try (ResultSet resultSet = statement.executeQuery()) {
 
                     if (resultSet.next()) {
                         user = new User();
@@ -204,6 +245,113 @@ public class UserServiceImpl implements UserService{
         }
         return user;
     }
+
+    @Override
+    public Optional<User> findByEmail(String email) {
+//        User user = null;
+//
+//        try (Connection connection = dataSource.getConnection()) {
+//            logger.info("Connected to the database");
+//
+//            String sql = "SELECT * FROM user WHERE email = ? ";
+//            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+//                statement.setString(1, email); // Set the email as a parameter
+//
+//                try (ResultSet resultSet = statement.executeQuery()) {
+//                    if (resultSet.next()) {
+//                        user = new User();
+//                        user.setId(resultSet.getInt("id"));
+//                        user.setName(resultSet.getString("name"));
+//                        user.setEmail(resultSet.getString("email"));
+//                        user.setPassword(resultSet.getString("password"));
+//                        user.setAbout(resultSet.getString("about"));
+//                    }
+//                }
+//                logger.info("Record selected successfully");
+//            } catch (SQLException e) {
+//                logger.error("Error executing the SQL query: " + e.getMessage());
+//                throw new SQLException("Error executing the SQL query: " + e.getMessage());
+//            }
+//
+//            if (user != null) {
+//                // Query to fetch user roles
+//                String roleQuery = "SELECT r.name FROM user_role ur JOIN role r ON ur.role_id = r.id WHERE ur.user_id = ?";
+//                try (PreparedStatement roleStatement = connection.prepareStatement(roleQuery)) {
+//                    roleStatement.setInt(1, user.getId());
+//                    try (ResultSet roleResultSet = roleStatement.executeQuery()) {
+//                        while (roleResultSet.next()) {
+//                            user.addRole(roleResultSet.getString("name"));
+//                        }
+//                    }
+//                } catch (SQLException e) {
+//                    logger.error("Error executing the role SQL query: " + e.getMessage());
+//                    throw new SQLException("Error executing the role SQL query: " + e.getMessage());
+//                }
+//            }
+//
+//        } catch (SQLException e) {
+//            logger.error("Error connecting to the database: " + e.getMessage());
+//            throw new RuntimeException("Error connecting to the database: " + e.getMessage());
+//        }
+
+
+        User user = null;
+
+        try (Connection connection = dataSource.getConnection()) {
+            logger.info("Connected to the database");
+
+            String sql = "SELECT * FROM user WHERE email = ? ";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, email); // Set the email as a parameter
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        user = new User();
+                        user.setId(resultSet.getInt("id"));
+                        user.setName(resultSet.getString("name"));
+                        user.setEmail(resultSet.getString("email"));
+                        user.setPassword(resultSet.getString("password"));
+                        user.setAbout(resultSet.getString("about"));
+                    }
+                }
+                logger.info("Record selected successfully");
+            } catch (SQLException e) {
+                logger.error("Error executing the SQL query: " + e.getMessage());
+                throw new SQLException("Error executing the SQL query: " + e.getMessage());
+            }
+
+            if (user != null) {
+                // Query to fetch user roles
+                String roleQuery = "SELECT r.id, r.name FROM user_role ur JOIN role r ON ur.role_id = r.id WHERE ur.user_id = ?";
+                try (PreparedStatement roleStatement = connection.prepareStatement(roleQuery)) {
+                    roleStatement.setInt(1, user.getId());
+                    try (ResultSet roleResultSet = roleStatement.executeQuery()) {
+                        Set<Role> roles = new HashSet<>();
+                        while (roleResultSet.next()) {
+                            Role role = new Role();
+                            role.setId(roleResultSet.getInt("id"));
+                            role.setName(roleResultSet.getString("name"));
+                            roles.add(role);
+                        }
+                        user.setRoles(roles);
+                    }
+                } catch (SQLException e) {
+                    logger.error("Error executing the role SQL query: " + e.getMessage());
+                    throw new SQLException("Error executing the role SQL query: " + e.getMessage());
+                }
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error connecting to the database: " + e.getMessage());
+            throw new RuntimeException("Error connecting to the database: " + e.getMessage());
+        }
+
+        return Optional.ofNullable(user);
+    }
+
+
+
+
 
 
 }

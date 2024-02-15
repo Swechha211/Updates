@@ -304,6 +304,8 @@ public class PostServiceImpl implements PostService{
         }
         return category;
     }
+
+
 //
 //    public String addUser(User user) {
 //    user.setPassword(passwordEncoder.encode(user.getPassword()));
