@@ -5,6 +5,7 @@ import com.example.blogwithsecurity.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.example.blogwithsecurity.utils.ApiResource;
 
@@ -52,6 +53,7 @@ public class PostController {
     }
 
     // update post
+    @PreAuthorize("hasRole('USER')")
     @PutMapping("/posts/{postId}")
     public ResponseEntity<Post> updatePost(@RequestBody Post post,@PathVariable Integer postId){
         Post updatePost = this.postService.updatePost(post, postId);

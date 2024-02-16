@@ -9,6 +9,8 @@ import com.example.blogwithsecurity.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
@@ -24,10 +26,60 @@ public class UserServiceImpl implements UserService{
 
     @Autowired
     private  User user;
+
+
+    private  BCryptPasswordEncoder passwordEncoder;
     private final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
     public UserServiceImpl(DataSource dataSource) {
         this.dataSource = dataSource;
+        this.passwordEncoder = new BCryptPasswordEncoder();
+
+    }
+
+    @Override
+    public User registerNewUser(User user) {
+        if (user.getName().isEmpty() || user.getEmail().isEmpty() || user.getPassword().isEmpty() || user.getAbout().isEmpty()) {
+            throw new IllegalArgumentException("User's name, email, password and about cannot be empty");
+        }
+        try (Connection connection = dataSource.getConnection()) {
+            try (Statement statement = connection.createStatement()) {
+                // Hash the user's password before storing it in the database
+                String hashedPassword = passwordEncoder.encode(user.getPassword());
+                String sql = "INSERT INTO user(name, email, password, about) VALUES ('" + user.getName() + "', '" + user.getEmail() + "', '" + hashedPassword + "', '" + user.getAbout() + "')";
+                statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+                try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        user.setId(generatedKeys.getInt(1));
+                    } else {
+                        throw new SQLException("Creating record failed, no ID obtained.");
+                    }
+                }
+
+                // Assign role to the user
+                assignUserRole(user.getId(), "USER", connection);
+
+        } catch (SQLException e) {
+            throw new SQLException("Error executing the SQL query" + e.getMessage());
+        }  } catch (Exception e) {
+            logger.error("Error connecting to the database" + e.getMessage());
+        }
+        return user;
+    }
+    private void assignUserRole(int userId, String roleName, Connection connection) throws SQLException {
+//        int roleId = 2;
+        try (Statement statement = connection.createStatement()) {
+            String roleSql = "SELECT id FROM role WHERE name = '" + roleName + "'";
+            try (ResultSet resultSet = statement.executeQuery(roleSql)) {
+                if (resultSet.next()) {
+                    int roleId1 = resultSet.getInt("id");
+                    String userRoleSql = "INSERT INTO user_role(user_id, role_id) VALUES (" + userId + ", " + roleId1 + ")";
+                    statement.executeUpdate(userRoleSql);
+                } else {
+                    throw new SQLException("Role not found: " );
+                }
+            }
+        }
     }
 
     @Override

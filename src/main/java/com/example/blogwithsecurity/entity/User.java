@@ -23,9 +23,14 @@ public class User implements UserDetails {
 
     private Set<Role> roles = new HashSet<>();
 
-    public Set<Role> getRoles() {
-        return roles;
+    public Set<String> getRole() {
+        return roles.stream()
+                .map(Role::getName)
+                .collect(Collectors.toSet());
     }
+
+
+
 
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
@@ -105,6 +110,8 @@ public class User implements UserDetails {
     public void setAbout(String about) {
         this.about = about;
     }
+
+
 
     public User() {
     }

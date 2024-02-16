@@ -2,7 +2,9 @@ package com.example.blogwithsecurity.controller;
 
 import com.example.blogwithsecurity.entity.JwtRequest;
 import com.example.blogwithsecurity.entity.JwtResponse;
+import com.example.blogwithsecurity.entity.User;
 import com.example.blogwithsecurity.security.JwtTokenHelper;
+import com.example.blogwithsecurity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +31,9 @@ public class AuthController {
 
     @Autowired
     private JwtTokenHelper helper;
+
+    @Autowired
+    private UserService userService;
     private Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     @PostMapping("/login")
@@ -59,6 +65,14 @@ public class AuthController {
     }
 
 
+    @PostMapping("/register")
+    public ResponseEntity<User> registerUser(@RequestBody User userDto) {
+        User registeredUser = this.userService.registerNewUser(userDto);
+        return  new ResponseEntity<User>(registeredUser, HttpStatus.CREATED);
+
+
+
+    }
 
 
 }

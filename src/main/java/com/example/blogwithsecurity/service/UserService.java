@@ -12,6 +12,7 @@ import java.util.Optional;
 
 public interface UserService {
 
+    User registerNewUser(User user);
     User create(User user);
     User update(User user, Integer userId);
     User findById(Integer userId);
