@@ -19,7 +19,7 @@ public class BlogwithSecurityApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		System.out.println(this.passwordEncoder.encode("r123a"));
+//		System.out.println(this.passwordEncoder.encode("r123a"));
 
 	}
 }

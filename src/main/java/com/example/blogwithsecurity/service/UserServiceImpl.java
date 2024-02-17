@@ -188,7 +188,10 @@ public class UserServiceImpl implements UserService{
                         user.setEmail(resultSet.getString("email"));
                         user.setPassword(resultSet.getString("password"));
                         user.setAbout(resultSet.getString("about"));
-                        // Populate other fields as needed
+                        Set<Role> roles = fetchRolesForUser(user.getId(), connection);
+                        user.setRoles(roles);
+
+
                         userList.add(user);
                     }
                 }
@@ -202,6 +205,24 @@ public class UserServiceImpl implements UserService{
         }
 
         return userList;
+    }
+
+    private Set<Role> fetchRolesForUser(int userId, Connection connection) throws SQLException {
+        Set<Role> roles = new HashSet<>();
+        String sql = "SELECT r.id, r.name FROM user_role ur JOIN role r ON ur.role_id = r.id WHERE ur.user_id = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setInt(1, userId);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    Role role = new Role();
+                    role.setId(resultSet.getInt("id"));
+                    role.setName(resultSet.getString("name"));
+                    roles.add(role);
+                    roles.add(role);
+                }
+            }
+        }
+        return roles;
     }
 
     @Override
